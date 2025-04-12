@@ -9,13 +9,13 @@ import type {
     // CombatStartedEventPayload // Remove - Not exported
 } from '@archess/shared';
 import { COMBAT_END } from '@archess/shared'; // Add this import
-import type { Server as SocketIOServer } from 'socket.io'; // Import the type
+import type { Server as SocketIOServer, Socket } from 'socket.io'; // Import the type and Socket
 import { CombatInstance } from './CombatInstance';
 import { GameManager } from './GameManager';
 import { presetService } from './PresetService';
 // Import types and constants needed for COMBAT_STARTED event
-import type { CombatStartedEventPayload } from '@archess/shared'; 
-import { COMBAT_STARTED } from '@archess/shared'; 
+import type { CombatStartedEventPayload, ClientToServerEvents, ServerToClientEvents } from '@archess/shared'; 
+import { COMBAT_STARTED, COMBAT_ACTION } from '@archess/shared'; 
 
 const activeCombats: Map<MatchId, CombatInstance> = new Map();
 const COMBAT_TICK_RATE_HZ = 20; // Example: 20 ticks per second
@@ -67,7 +67,7 @@ function initiateCombat(
         );
         activeCombats.set(matchId, combatInstance);
         
-        // Notify players that combat is starting
+        // Notify players that combat is starting & ATTACH LISTENERS
         if (ioInstance) {
             const initialCombatState = combatInstance.getCombatStateSnapshot();
             const payload: CombatStartedEventPayload = {
@@ -79,6 +79,49 @@ function initiateCombat(
             };
             console.log(`[CombatManager] Emitting ${COMBAT_STARTED} for match ${matchId}`);
             ioInstance.to(matchId).emit(COMBAT_STARTED, payload);
+
+            // --- Attach Combat Action Listeners --- 
+            combatInstance.playerIds.forEach(playerId => {
+                // Find the socket associated with this playerId
+                // We might need a better way to map playerId to socket, 
+                // but for now, assume GameManager or LobbyManager can provide it,
+                // or we search the io instance.
+                const playerSocket = findSocketByPlayerId(playerId); // Need to implement findSocketByPlayerId
+
+                if (playerSocket) {
+                    console.log(`[CombatManager] Attaching '${COMBAT_ACTION}' listener for ${playerId} in match ${matchId}`);
+                    // Ensure we don't attach multiple listeners
+                    // playerSocket.removeAllListeners('combatAction'); // <-- Keep commented out
+
+                    // Use the imported constant for the event name
+                    playerSocket.on(COMBAT_ACTION, ({ matchId: receivedMatchId, actionPayload }) => {
+                        // Double-check the matchId from the event payload
+                        if (receivedMatchId !== matchId) return; 
+                        
+                        // Re-add the log that was in index.ts
+                        // console.log(`[CombatManager] Received combatAction from ${playerSocket.id} (Player: ${playerId}). Match: ${matchId}, Payload:`, actionPayload); // <-- REMOVE LOG
+                        
+                        // Basic validation (can enhance later)
+                        if (!actionPayload || !actionPayload.type) {
+                            console.warn(`[CombatManager Socket ${playerSocket.id}] Invalid combatAction payload: Missing type.`, { receivedMatchId, actionPayload });
+                            playerSocket.emit('error', { message: 'Invalid combat action payload: Missing type.' });
+                            return;
+                        }
+                        
+                        // Forward to the actual handler function
+                        handleCombatAction(playerId, matchId, actionPayload as CombatActionPayload);
+                    });
+
+                    // --- REMOVE LISTENER CHECK LOG --- 
+                    // const listenerCount = playerSocket.listenerCount(COMBAT_ACTION);
+                    // console.log(`[CombatManager] Listener count for ${COMBAT_ACTION} on socket ${playerSocket.id} (Player: ${playerId}): ${listenerCount}`);
+                    // --- END REMOVE LISTENER CHECK LOG ---
+                } else {
+                    console.error(`[CombatManager] Could not find socket for player ${playerId} to attach combat listener.`);
+                }
+            });
+            // --- End Listener Attachment ---
+
         } else {
             console.error(`[CombatManager] Cannot emit ${COMBAT_STARTED}: IO instance not initialized.`);
         }
@@ -93,7 +136,10 @@ function initiateCombat(
 
 /** Handles incoming combat actions from players. */
 function handleCombatAction(playerId: PlayerId, matchId: MatchId, action: CombatActionPayload): void {
-    console.log(`[CombatManager] handleCombatAction received for player ${playerId}, match ${matchId}, action ${action.type}`);
+    // --- REMOVE LOG HERE --- 
+    // console.log(`[CombatManager HANDLE_COMBAT_ACTION_ENTRY] Received for player ${playerId}, match ${matchId}, action:`, action);
+    // --- END REMOVE LOG ---
+
     const combatInstance = activeCombats.get(matchId);
     if (!combatInstance) {
         console.warn(`[CombatManager] Received combat action for inactive/non-existent combat: ${matchId}`);
@@ -199,6 +245,24 @@ function stopCombatLoop(): void {
         clearInterval(combatLoopInterval);
         combatLoopInterval = null;
     }
+}
+
+// --- Helper Function to Find Socket (Needs Implementation) --- 
+// This is a placeholder - the actual implementation might need access
+// to a global map or rely on GameManager/LobbyManager.
+function findSocketByPlayerId(playerId: PlayerId): Socket<ClientToServerEvents, ServerToClientEvents> | undefined {
+    if (!ioInstance) return undefined;
+    // This is inefficient for large numbers of connections, but works for now
+    // It requires the playerId to be stored on the socket object, 
+    // e.g., socket.data.playerId = playerId; when the player connects/joins.
+    for (const [_, socket] of ioInstance.sockets.sockets) {
+        // Assuming playerId is stored in socket.data.playerId
+        if (socket.data.playerId === playerId) { 
+            return socket;
+        }
+    }
+    // console.warn(`[findSocketByPlayerId] Socket not found for playerId: ${playerId}`); // <-- REMOVE LOG
+    return undefined;
 }
 
 // --- Re-add the Export Block --- 

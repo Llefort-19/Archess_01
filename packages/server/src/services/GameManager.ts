@@ -347,104 +347,104 @@ function handlePlayerAction(
     actionType: PlayerActionType, 
     payload: PlayerActionPayloadUnion // Use the correctly derived payload union
 ): void {
-  console.log(`[Game ${matchId}] Handling action '${actionType}' from player ${playerId}`);
-  const gameState = getGameState(matchId);
-  if (!gameState || gameState.isGameOver) {
-    console.warn(`[Game ${matchId}] Action received for inactive/over game.`);
-    // Maybe emit error? 
-    return;
-  }
+    console.log(`[GameManager handlePlayerAction] Received:`, {playerId, matchId, actionType, payload }); // <-- TRACE LOG
 
-  if (gameState.currentTurn !== playerId) {
-    console.warn(`[Game ${matchId}] Action received from player ${playerId} but it is ${gameState.currentTurn}'s turn.`);
-    emitErrorToSocket(playerId, "It's not your turn.");
-    return;
-  }
+    const gameState = getGameState(matchId)
+    if (!gameState) {
+        emitErrorToSocket(playerId, `Game not found: ${matchId}`, 'GAME_NOT_FOUND');
+        return;
+    }
 
-  try {
-      switch (actionType) {
-        case 'moveUnit':
-          // Type guard to ensure payload is MoveActionPayload
-          if (typeof payload === 'object' && payload !== null && 'unitId' in payload && 'targetPosition' in payload) {
-              // Reconstruct move logic here
-              const movePayload = payload as MoveActionPayload; // Assert type after check
-              const unitToMove = gameState.units.find(u => u.id === movePayload.unitId);
-              
-              if (!unitToMove) {
-                  console.error(`[Game ${matchId}] Unit ${movePayload.unitId} not found for move action.`);
-                  emitErrorToSocket(playerId, 'Invalid unit selected for move.');
-                  return;
-              }
-              
-              const unitDef = gameState.unitDefinitions[unitToMove.typeId]; 
-              if (!unitDef) {
-                  console.error(`[Game ${matchId}] Unit definition ${unitToMove.typeId} not found for unit ${unitToMove.id}.`);
-                  emitErrorToSocket(playerId, 'Unit definition missing, cannot move.');
-                  return;
-              }
+    if (gameState.currentTurn !== playerId) {
+        console.warn(`[Game ${matchId}] Action received from player ${playerId} but it is ${gameState.currentTurn}'s turn.`);
+        emitErrorToSocket(playerId, "It's not your turn.");
+        return;
+    }
 
-              if (isValidMove(gameState, playerId, unitToMove, movePayload.targetPosition, unitDef)) {
-                  const targetPosition = movePayload.targetPosition;
-                  const targetUnit = gameState.units.find(u => 
-                      u.position.x === targetPosition.x && 
-                      u.position.y === targetPosition.y
-                  );
+    try {
+        switch (actionType) {
+            case 'moveUnit':
+                // Type guard to ensure payload is MoveActionPayload
+                if (typeof payload === 'object' && payload !== null && 'unitId' in payload && 'targetPosition' in payload) {
+                    // Reconstruct move logic here
+                    const movePayload = payload as MoveActionPayload; // Assert type after check
+                    const unitToMove = gameState.units.find(u => u.id === movePayload.unitId);
+                    
+                    if (!unitToMove) {
+                        console.error(`[Game ${matchId}] Unit ${movePayload.unitId} not found for move action.`);
+                        emitErrorToSocket(playerId, 'Invalid unit selected for move.');
+                        return;
+                    }
+                    
+                    const unitDef = gameState.unitDefinitions[unitToMove.typeId]; 
+                    if (!unitDef) {
+                        console.error(`[Game ${matchId}] Unit definition ${unitToMove.typeId} not found for unit ${unitToMove.id}.`);
+                        emitErrorToSocket(playerId, 'Unit definition missing, cannot move.');
+                        return;
+                    }
 
-                  if (targetUnit && targetUnit.owner !== playerId) {
-                      // --- Initiate Combat --- 
-                      console.log(`[Game ${matchId}] Target is opponent ${targetUnit.id}. Initiating combat...`); 
-                      
-                      // Update attacker position *in memory* before initiating combat
-                      // Note: This state change won't be broadcast until *after* combat resolution
-                      const unitsWithAttackerMoved = gameState.units.map(u => 
-                          u.id === unitToMove.id ? { ...u, position: targetPosition } : u
-                      );
-                      gameState.units = unitsWithAttackerMoved; // Update the state directly in the map
-                      
-                      resolveBattle(matchId, unitToMove.id, targetUnit.id);
-                      // Turn advancement happens within resolveCombat -> endTurn flow
-                  
-                  } else if (!targetUnit) {
-                      // --- Move to Empty Square --- 
-                      console.log(`[Game ${matchId}] Moving unit ${unitToMove.id} to empty square (${targetPosition.x},${targetPosition.y}).`);
-                      const updatedUnits = gameState.units.map(u => 
-                          u.id === unitToMove.id ? { ...u, position: targetPosition } : u
-                      );
-                      // Update state and broadcast immediately
-                      updateGameState(matchId, { units: updatedUnits });
-                      // End the turn after a successful move to an empty square
-                      endTurn(matchId, playerId); 
-                  
-                  } else {
-                      // Target occupied by friendly unit - should have been caught by isValidMove
-                      console.warn(`[Game ${matchId}] Move validation failed: Target occupied by friendly unit ${targetUnit.id}.`);
-                      emitErrorToSocket(playerId, 'Cannot move onto a square occupied by your own unit.');
-                  }
-              } else {
-                  console.warn(`[Game ${matchId}] Invalid move attempt by ${playerId}.`);
-                  emitErrorToSocket(playerId, 'Invalid move.');
-              }
-          } else {
-              throw new Error('Invalid payload for moveUnit action.');
-          }
-          break;
-        case 'endTurn':
-          // No payload expected for endTurn, but check just in case
-          if (typeof payload !== 'object' || Object.keys(payload).length !== 0) {
-              console.warn(`[Game ${matchId}] Received unexpected payload for endTurn action.`);
-          }
-          endTurn(matchId, playerId); 
-          break;
-        // Add cases for other strategy actions (e.g., useAbility)
-        default:
-          console.warn(`[Game ${matchId}] Unhandled action type: ${actionType}`);
-          emitErrorToSocket(playerId, `Unknown action type: ${actionType}`);
-      }
-  } catch (error: unknown) {
-      console.error(`[Game ${matchId}] Error handling action ${actionType} for player ${playerId}:`, error);
-      const message = error instanceof Error ? error.message : 'An unknown error occurred while processing your action.';
-      emitErrorToSocket(playerId, message);
-  }
+                    if (isValidMove(gameState, playerId, unitToMove, movePayload.targetPosition, unitDef)) {
+                        const targetPosition = movePayload.targetPosition;
+                        const targetUnit = gameState.units.find(u => 
+                            u.position.x === targetPosition.x && 
+                            u.position.y === targetPosition.y
+                        );
+
+                        if (targetUnit && targetUnit.owner !== playerId) {
+                            // --- Initiate Combat --- 
+                            console.log(`[Game ${matchId}] Target is opponent ${targetUnit.id}. Initiating combat...`); 
+                            
+                            // Update attacker position *in memory* before initiating combat
+                            // Note: This state change won't be broadcast until *after* combat resolution
+                            const unitsWithAttackerMoved = gameState.units.map(u => 
+                                u.id === unitToMove.id ? { ...u, position: targetPosition } : u
+                            );
+                            gameState.units = unitsWithAttackerMoved; // Update the state directly in the map
+                            
+                            resolveBattle(matchId, unitToMove.id, targetUnit.id);
+                            // Turn advancement happens within resolveCombat -> endTurn flow
+                        
+                        } else if (!targetUnit) {
+                            // --- Move to Empty Square --- 
+                            console.log(`[Game ${matchId}] Moving unit ${unitToMove.id} to empty square (${targetPosition.x},${targetPosition.y}).`);
+                            const updatedUnits = gameState.units.map(u => 
+                                u.id === unitToMove.id ? { ...u, position: targetPosition } : u
+                            );
+                            // Update state and broadcast immediately
+                            updateGameState(matchId, { units: updatedUnits });
+                            // End the turn after a successful move to an empty square
+                            endTurn(matchId, playerId); 
+                        
+                        } else {
+                            // Target occupied by friendly unit - should have been caught by isValidMove
+                            console.warn(`[Game ${matchId}] Move validation failed: Target occupied by friendly unit ${targetUnit.id}.`);
+                            emitErrorToSocket(playerId, 'Cannot move onto a square occupied by your own unit.');
+                        }
+                    } else {
+                        console.warn(`[Game ${matchId}] Invalid move attempt by ${playerId}.`);
+                        emitErrorToSocket(playerId, 'Invalid move.');
+                    }
+                } else {
+                    throw new Error('Invalid payload for moveUnit action.');
+                }
+                break;
+            case 'endTurn':
+                // No payload expected for endTurn, but check just in case
+                if (typeof payload !== 'object' || Object.keys(payload).length !== 0) {
+                    console.warn(`[Game ${matchId}] Received unexpected payload for endTurn action.`);
+                }
+                endTurn(matchId, playerId); 
+                break;
+            // Add cases for other strategy actions (e.g., useAbility)
+            default:
+                console.warn(`[Game ${matchId}] Unhandled action type: ${actionType}`);
+                emitErrorToSocket(playerId, `Unknown action type: ${actionType}`);
+        }
+    } catch (error: unknown) {
+        console.error(`[Game ${matchId}] Error handling action ${actionType} for player ${playerId}:`, error);
+        const message = error instanceof Error ? error.message : 'An unknown error occurred while processing your action.';
+        emitErrorToSocket(playerId, message);
+    }
 }
 
 // --- Combat Resolution Logic ---

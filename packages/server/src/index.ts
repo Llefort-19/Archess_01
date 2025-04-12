@@ -50,6 +50,12 @@ app.get('/api/presets', (_req: Request, res: Response) => {
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id)
 
+  // --- Store Player ID on Socket --- 
+  // Assign the socket.id as the playerId in socket.data for later lookup
+  // Note: If you have a separate login/authentication system, 
+  // you might assign a different unique user ID here instead.
+  socket.data.playerId = socket.id; 
+
   socket.emit('message', `Welcome, you are connected with ID: ${socket.id}`)
 
   socket.on('disconnect', () => {
@@ -73,28 +79,6 @@ io.on('connection', (socket) => {
       // Suppress warnings for this line
       const handlerPayload = payload as MoveActionPayload | Record<string, never>; 
       GameManager.handlePlayerAction(socket.id, matchId, actionType, handlerPayload); // eslint-disable-line
-  });
-
-  // Destructured payload is typed
-  socket.on('combatAction', ({ matchId, actionPayload }) => { 
-      // --- Add Log Point 3 --- 
-      console.log(`[Server] Received combatAction from ${socket.id}. Match: ${matchId}, Payload:`, actionPayload);
-      // Validation
-      if (!matchId || !actionPayload) {
-          console.warn(`[Socket ${socket.id}] Invalid combatAction received:`, { matchId, actionPayload });
-          socket.emit('error', { message: 'Invalid combat action format.' });
-          return;
-      }
-      // Check actionPayload.type after verifying actionPayload exists
-      if (!actionPayload.type) {
-          console.warn(`[Socket ${socket.id}] Invalid combatAction payload: Missing type.`, { matchId, actionPayload });
-          socket.emit('error', { message: 'Invalid combat action payload: Missing type.' });
-          return;
-      }
-      console.log(`[Socket ${socket.id}] Received 'combatAction' data:`, { matchId, actionPayload });
-      // Use intermediate variable with assertion
-      const handlerActionPayload = actionPayload as CombatActionPayload;
-      CombatManager.handleCombatAction(socket.id, matchId, handlerActionPayload); // eslint-disable-line
   });
 })
 

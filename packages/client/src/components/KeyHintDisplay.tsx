@@ -3,28 +3,39 @@ import type { AbilityDefinition } from '@archess/shared';
 import './KeyHintDisplay.css';
 
 interface KeyHintDisplayProps {
-  bindings: { [key: string]: string }; // key: abilityId
+  keyOrder: string[]; // Array of keys in the desired display order (e.g., ['u', 'i', 'o', 'p'])
   lastKeyPressed: string | null;
-  unitAbilities: AbilityDefinition[]; // To get ability names
+  unitAbilities: AbilityDefinition[]; // Abilities available to the current unit
 }
 
-function KeyHintDisplay({ lastKeyPressed, bindings, unitAbilities }: KeyHintDisplayProps): React.ReactElement {
-  const getAbilityName = (abilityId: string): string => {
-    return unitAbilities.find(ab => ab.id === abilityId)?.name ?? abilityId;
+function KeyHintDisplay({ lastKeyPressed, keyOrder, unitAbilities }: KeyHintDisplayProps): React.ReactElement {
+  
+  // --- REMOVE LOG --- 
+  // console.log(`[KeyHintDisplay] Received props - lastKeyPressed: ${lastKeyPressed}, keyOrder: ${keyOrder.join(',')}, abilities: ${unitAbilities.map(a=>a.id).join(',')}`);
+  // --- END REMOVE LOG ---
+
+  // Helper to get ability name by index safely
+  const getAbilityByIndex = (index: number): AbilityDefinition | undefined => {
+    return unitAbilities?.[index];
   };
 
   return (
-    <div className="key-hint-container">
-      {Object.entries(bindings).map(([key, abilityId]) => (
-        <div 
-          key={key} 
-          className={`key-hint ${lastKeyPressed === key ? 'active' : ''}`}
-          title={getAbilityName(abilityId)} // Show full name on hover
-        >
-          <span className="key-char">{key.toUpperCase()}</span>:
-          <span className="ability-name">{getAbilityName(abilityId)}</span>
-        </div>
-      ))}
+    <div className="key-hint-display">
+      {keyOrder.map((key, index) => {
+        const ability = getAbilityByIndex(index);
+        if (!ability) return null; // Don't render a hint if there's no ability at this index
+
+        return (
+          <div 
+            key={key} 
+            className={`key-hint ${lastKeyPressed === key ? 'active' : ''}`}
+            title={ability.name} // Show full name on hover
+          >
+            <span className="key-char">{key.toUpperCase()}</span>:
+            <span className="ability-name">{ability.name}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }

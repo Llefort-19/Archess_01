@@ -3,8 +3,8 @@ import http from 'http'
 import { Server as SocketIOServer } from 'socket.io'
 import dotenv from 'dotenv'
 import path from 'path'
-import cors from 'cors'
 
+import { app } from './app'
 import { presetService } from './services/PresetService'
 import { LobbyManager } from './services/LobbyManager'
 import { GameManager } from './services/GameManager'
@@ -19,17 +19,13 @@ import type {
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../../.env') }) // Load root .env
 
-const app = express()
+// Use the imported app to create the server
 const server = http.createServer(app)
-
-// Configure CORS
-const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173'
-app.use(cors({ origin: clientUrl })) // Use cors middleware
 
 // Create the io instance WITH types
 const io = new SocketIOServer<ClientToServerEvents, ServerToClientEvents>(server, {
   cors: {
-    origin: clientUrl,
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
     methods: ['GET', 'POST'],
   },
 })
@@ -37,14 +33,14 @@ const io = new SocketIOServer<ClientToServerEvents, ServerToClientEvents>(server
 const PORT = parseInt(process.env.SERVER_PORT || '3001', 10)
 
 // --- API Endpoints --- 
-app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).send('Server healthy')
-})
+// app.get('/health', (_req: Request, res: Response) => {
+//   res.status(200).send('Server healthy')
+// })
 
-app.get('/api/presets', (_req: Request, res: Response) => {
-    const presets = presetService.listAvailablePresets();
-    res.status(200).json(presets);
-});
+// app.get('/api/presets', (_req: Request, res: Response) => {
+//     const presets = presetService.listAvailablePresets();
+//     res.status(200).json(presets);
+// });
 
 // --- Socket.IO Connections --- 
 io.on('connection', (socket) => {
@@ -110,7 +106,7 @@ async function startServer() {
     console.log(`[Server] Attempting to listen on port ${PORT}...`);
     server.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`)
-      console.log(`Allowing connections from: ${clientUrl}`)
+      console.log(`Allowing connections from: ${process.env.CLIENT_URL || 'http://localhost:5173'}`)
       console.log(`Available presets loaded: ${presetService.listAvailablePresets().length}`)
     })
 

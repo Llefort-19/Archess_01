@@ -12,6 +12,9 @@
     "noEmit": true, // Vite handles emitting files
     "jsx": "react-jsx", // Use new JSX transform
 
+    /* Add types for testing */
+    "types": ["vite/client", "vitest/globals"],
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -23,7 +26,7 @@
     //   "@/*": ["./src/*"]
     // }
   },
-  "include": ["src", "vite.config.ts"],
+  "include": ["src", "vite.config.ts", "vitest.config.ts"],
   "exclude": ["node_modules", "dist"],
   "references": [{ "path": "../shared" }] // Reference shared types
 } 

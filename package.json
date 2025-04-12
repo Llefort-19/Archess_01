@@ -16,7 +16,7 @@
     "lint": "eslint . --ext .ts,.tsx --ignore-path .gitignore",
     "format": "prettier --write . --ignore-path .gitignore",
     "check-types": "tsc --build --force",
-    "test": "echo \"Error: no test specified yet\" && exit 1"
+    "test": "yarn workspaces foreach run test"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.16",

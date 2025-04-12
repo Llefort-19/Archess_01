@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    /* Base Options */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "moduleResolution": "node",
+
+    /* Strictness */
+    "strict": true,
+    "noUncheckedIndexedAccess": true, // Recommended for stricter checks
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+
+    /* If NOT transpiling with TypeScript (e.g., using Babel or esbuild) */
+    // "moduleResolution": "Bundler", // Use "NodeNext" or "Bundler" for modern module resolution
+    // "module": "Preserve", // Keep module syntax for bundler
+    // "noEmit": true,
+
+    /* If your code runs in the DOM */
+    // "lib": ["es2022", "dom", "dom.iterable"],
+
+    /* If you are using path aliases */
+    // "baseUrl": ".",
+    // "paths": { ... }
+
+    /* Output (will be overridden by packages) */
+    // "outDir": "./dist",
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true
+  }
+  // "exclude": ["node_modules", "dist", "build"]
+  // "include": [...] // Typically defined in package-specific tsconfig
+} 

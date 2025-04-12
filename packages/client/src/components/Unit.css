@@ -1,0 +1,43 @@
+/* src/components/Unit.css */
+.unit {
+  width: 80%; /* Slightly smaller than tile */
+  height: 80%;
+  border-radius: 50%; /* Circular units */
+  position: absolute; /* Positioned relative to the Tile */
+  top: 10%;
+  left: 10%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.2em;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer; /* Indicate interactable later */
+  z-index: 10; /* Ensure units are above tiles */
+}
+
+.unit-label {
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* Player-specific colors */
+.unit-p1 {
+  background-color: #3a7bd5;
+  border: 2px solid #1a5bb5;
+}
+
+.unit-p2 {
+  background-color: #d53a3a;
+  border: 2px solid #b51a1a;
+}
+
+.unit:hover {
+    filter: brightness(1.2);
+}
+
+.unit-selected {
+    outline: 3px solid yellow;
+    outline-offset: 1px;
+    box-shadow: 0 0 10px yellow, 0 2px 4px rgba(0, 0, 0, 0.3);
+} 

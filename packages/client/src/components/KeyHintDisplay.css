@@ -1,0 +1,45 @@
+.key-hint-container {
+    position: absolute;
+    bottom: 10px; /* Position near the bottom */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px; /* Space between hints */
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    color: #eee;
+    z-index: 10;
+}
+
+.key-hint {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 6px;
+    border-radius: 3px;
+    transition: background-color 0.1s ease-out; /* Transition for flash effect */
+}
+
+.key-hint.active {
+    background-color: rgba(255, 255, 255, 0.5); /* White flash */
+    color: #222; /* Darker text during flash */
+}
+
+.key-char {
+    font-weight: bold;
+    background-color: #555;
+    color: #fff;
+    padding: 1px 4px;
+    border-radius: 2px;
+    min-width: 16px; /* Ensure consistent key width */
+    text-align: center;
+}
+
+.ability-name {
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px; /* Limit width */
+} 

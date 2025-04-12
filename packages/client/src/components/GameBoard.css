@@ -1,0 +1,9 @@
+/* src/components/GameBoard.css */
+.game-board {
+  display: grid;
+  border: 2px solid #333;
+  background-color: #1a1a1a;
+  /* width and height are set via inline styles */
+  margin: 20px auto; /* Center the board */
+  position: relative; /* For absolute positioning context if needed */
+} 

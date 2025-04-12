@@ -1,0 +1,28 @@
+/* packages/client/src/components/MeleeSwingEffect.css */
+
+/* Applied to the SVG <polygon> element */
+.melee-swing-effect {
+  /* Static appearance properties */
+  fill: rgba(255, 255, 100, 0.7); /* Semi-transparent yellow fill */
+  stroke: rgba(255, 255, 255, 0.8); /* White outline */
+  stroke-width: 1px;
+  /* transform-origin is not applicable to polygon points */
+  /* pointer-events: none; -> Set on SVG container */
+  /* z-index: 15; -> Set on SVG container */
+
+  /* Apply the animation */
+  animation-name: melee-swing-fadeout; /* Name matches keyframes below */
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards; 
+  /* animation-duration is set inline on the polygon */
+}
+
+/* Keyframes for the fade-out animation - only control opacity */
+@keyframes melee-swing-fadeout {
+  0% {
+    opacity: 0.7; /* Start visible */
+  }
+  100% {
+    opacity: 0;   /* Fade out completely */
+  }
+} 

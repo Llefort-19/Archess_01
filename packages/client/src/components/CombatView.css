@@ -1,0 +1,256 @@
+/* packages/client/src/components/CombatView.css */
+
+.combat-view-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #e8f0fe; /* Light blue background for the whole view */
+  min-height: 100vh; /* Ensure it takes full viewport height */
+  box-sizing: border-box;
+  /* position: relative; */ /* REMOVED */
+}
+
+.combat-status {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    max-width: 800px; /* Match arena width */
+    margin-bottom: 15px;
+    font-weight: bold;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.6); /* Slightly transparent white background */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.combat-arena {
+  border: 3px solid #a0b0c0; /* Slightly darker blue-grey border */
+  background-color: #d0e0d0; /* Light green background for the arena */
+  position: relative; 
+  overflow: hidden; 
+  margin-bottom: 20px;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.1); /* Inner shadow for depth */
+}
+
+/* --- Styles for Units --- */
+.combat-unit {
+  position: absolute; /* Essential for positioning based on left/top */
+  border-radius: 50%; /* Make them circles */
+  /* width/height set via inline style based on hitboxRadius */
+  /* left/top set via inline style based on position */
+  /* background-color is set by player/enemy specific classes */
+  /* transform is set via inline style for rotation */
+  z-index: 10;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3); /* Subtle shadow */
+  border: 1px solid rgba(0,0,0,0.2);
+}
+
+.player-unit {
+  background-color: blue;
+}
+
+.enemy-unit {
+  background-color: red;
+}
+
+/* Visual feedback when a unit is hit */
+.hit-effect {
+  /* Quick flash using animation */
+  animation-name: hit-flash;
+  animation-duration: 0.3s;
+  animation-timing-function: ease-out;
+}
+
+@keyframes hit-flash {
+  0% { background-color: lime; transform: scale(1.2); } /* Start bright green and slightly larger */
+  50% { background-color: lime; transform: scale(1.2); }
+  100% { 
+    /* Return to original color (needs to be explicit or inherit doesn't work well) */
+    /* This part is tricky - ideally it returns to blue or red. */
+    /* We might need separate animations or handle color reset in JS */
+    /* For now, just fade the effect: */
+    transform: scale(1.0); 
+  } 
+}
+
+/* --- End Unit Styles --- */
+
+/* Styles for projectiles (if needed) */
+/* .projectile { ... } */
+
+.touch-controls {
+    display: flex;
+    justify-content: space-around;
+    align-items: center; /* Vertically align items */
+    width: 100%;
+    max-width: 600px;
+    margin-top: 20px;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.7); /* Slightly transparent white */
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.joystick-area {
+    border: 2px solid #b0c0d0; /* Match arena border color tone */
+    padding: 0; 
+    text-align: center;
+    width: 100px; 
+    height: 100px; 
+    border-radius: 50%; 
+    background-color: rgba(220, 230, 240, 0.7); /* Light blue-grey base */
+    position: relative; 
+    touch-action: none; 
+    box-sizing: border-box; 
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.2); /* Inner shadow */
+}
+
+.joystick-handle {
+    width: 45px; /* Slightly larger handle */
+    height: 45px; 
+    border-radius: 50%;
+    background-color: rgba(90, 100, 120, 0.85); /* Darker grey-blue handle */
+    position: absolute;
+    transform: translate(-50%, -50%); 
+    top: 50%; 
+    left: 50%; 
+    cursor: grab;
+    transition: top 0.1s ease-out, left 0.1s ease-out;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 3px rgba(0,0,0,0.3);
+}
+
+.joystick-handle:active {
+    cursor: grabbing;
+    background-color: rgba(70, 80, 100, 0.9); /* Slightly darker when active */
+}
+
+.joystick-area p {
+    display: none;
+}
+
+.action-buttons-area {
+    /* border: 1px solid #eee; */ /* Remove border if desired */
+    padding: 10px;
+    text-align: center;
+    min-width: 150px;
+    display: flex; /* Use flexbox for centering */
+    justify-content: center; 
+    align-items: center;
+}
+
+/* Remove default button styles if needed */
+.action-buttons-area button {
+    margin: 0; /* Reset margin */
+}
+
+/* Specific styles for the basic attack button */
+.basic-attack-button {
+    background-color: #4CAF50; /* Green background */
+    border: none;
+    color: white;
+    padding: 15px 25px; /* Make button larger */
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 18px; /* Increase font size */
+    border-radius: 8px;
+    cursor: pointer; 
+    transition: background-color 0.1s ease-in-out, transform 0.1s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.basic-attack-button:hover {
+    background-color: #45a049; /* Darker green on hover */
+}
+
+/* Style for the active (flashing) state */
+.basic-attack-button.active {
+    background-color: #ffeb3b; /* Yellow flash */
+    color: #333; /* Darker text for yellow */
+    transform: scale(0.95); /* Slightly shrink when pressed */
+}
+
+/* --- Projectile Styles --- */
+.projectile {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    z-index: 5;
+    transition: left 0.05s linear, top 0.05s linear; /* Keep smooth transition */
+    pointer-events: none; /* Don't interfere with clicks */
+}
+
+.projectile-default {
+    background-color: grey;
+}
+
+.aoe-projectile {
+    background-color: orange; /* Make AoE projectiles orange */
+    width: 10px; /* Slightly larger */
+    height: 10px;
+}
+
+/* --- AoE Zone Styles --- */
+.aoe-zone {
+    position: absolute;
+    border: 3px solid red; /* Keep red for now */
+    background-color: rgba(255, 0, 0, 0.3); /* Keep red fill for now */
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 4;
+    /* opacity: 1; */ /* Let animation handle opacity */
+    /* --- Re-enable Animation --- */
+    animation-name: aoe-pulse;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 1; /* Run once */
+    animation-fill-mode: forwards; /* Stay at end state (transparent) */
+    opacity: 0; /* Start invisible before animation */
+}
+
+/* --- Re-enable Keyframe Animation --- */
+@keyframes aoe-pulse {
+    0% {
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(0.1); /* Start small */
+    }
+    70% {
+        opacity: 0.4;
+        transform: translate(-50%, -50%) scale(1); /* Reach full size */
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.1); /* Slightly overshoot and fade */
+    }
+}
+
+/* --- Styles for Key Hint Display Container --- */
+.key-hint-container {
+  width: 100%; /* Take full width available */
+  max-width: 800px; /* CHANGED: Match arena/status width */
+  margin-top: 10px; /* Space below arena */
+  margin-bottom: 10px; /* Space above controls */
+  padding: 8px; /* Padding inside the container */
+  background-color: rgba(200, 200, 210, 0.6); /* Light greyish background */
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-sizing: border-box; /* Include padding in width */
+  z-index: 1; 
+  /* align-self: center; */ /* REMOVED - Handled by parent */
+}
+
+/* Styles for the KeyHintDisplay component itself can go here or in its own CSS */
+/* Example (adjust based on KeyHintDisplay internal structure): */
+.key-hint-display {
+  display: flex; 
+  justify-content: space-around; 
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 10px; /* Space between hints */
+}
+
+/* ... rest of styles ... */ 
